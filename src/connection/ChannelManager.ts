@@ -2,9 +2,6 @@ import { Channel, ConfirmChannel } from "amqplib";
 import { ChannelType } from "./types";
 import { ConnectionManager } from "./ConnectionManager";
 
-/**
- * ChannelManager manages consumer and publisher channels with lazy creation.
- */
 export class ChannelManager {
   private consumerChannel: Channel | null = null;
   private publisherChannel: ConfirmChannel | null = null;
