@@ -2,13 +2,13 @@ import amqp from "amqplib";
 import { InputBindingOptions, MessageHandler } from "./types";
 import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
-import { RetryManager } from "binding/retry/RetryManager";
-import { DeadLetterHandler } from "binding/retry/DeadLetterHandler";
-import { RetryStrategy } from "binding/retry/types";
+import { RetryManager } from "retry/RetryManager";
+import { DeadLetterHandler } from "retry/DeadLetterHandler";
+import { RetryStrategy } from "retry/types";
 import {
   FixedRetryStrategy,
   ExponentialBackoffStrategy,
-} from "binding/retry/RetryStrategy";
+} from "retry/RetryStrategy";
 
 export class InputBinding {
   private channel: amqp.Channel | undefined;
