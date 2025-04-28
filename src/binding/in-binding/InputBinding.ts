@@ -32,7 +32,11 @@ export class InputBinding {
     if (exchange) {
       await this.channel.assertExchange(exchange, "topic", { durable: true });
       const bindKey = routingKey || "";
-      await this.channel.bindQueue(queue, exchange, bindKey);
+
+      if (!retry) {
+        await this.channel.assertQueue(queue, { durable: true });
+        await this.channel.bindQueue(queue, exchange, bindKey);
+      }
     }
     if (prefetch) {
       await this.channel.prefetch(prefetch);
