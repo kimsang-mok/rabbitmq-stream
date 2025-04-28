@@ -4,10 +4,57 @@ import "module-alias";
 import { ConnectionManager } from "connection/ConnectionManager";
 import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
+import { MessagingApplicationOptions } from "application/types";
+import { MessagingApplication } from "application/MessagingApplication";
 
 async function bootstrap() {
   console.log("System initialized.");
 
+  // createSimpleApplication();
+
+  await createMessagingApplication();
+}
+
+bootstrap().catch((err) => {
+  console.error("System failed to initialize.", err);
+  process.exit(1);
+});
+
+async function createMessagingApplication() {
+  const config: MessagingApplicationOptions = {
+    connection: {
+      uri: "amqp://localhost",
+      reconnectStrategy: "jittered",
+    },
+    binder: {
+      inputs: {
+        userCreatedInput: {
+          queue: "user.created.queue",
+          exchange: "user.exchange",
+          routingKey: "user.created",
+          retry: {
+            strategy: "exponential",
+            maxAttempts: 5,
+          },
+        },
+      },
+      outputs: {
+        userPublisher: {
+          exchange: "user.exchange",
+          exchangeType: "topic",
+        },
+      },
+    },
+  };
+
+  const app = new MessagingApplication(config);
+
+  await app.start();
+
+  return app;
+}
+
+async function createSimpleApplication() {
   const connectionManager = ConnectionManager.getInstance({
     uri: "amqp://guest:guest@localhost:5672/",
     reconnectStrategy: "exponential", // use exponential backoff
@@ -59,8 +106,3 @@ async function bootstrap() {
     console.log(`Reconnecting... attempt ${attempt}`)
   );
 }
-
-bootstrap().catch((err) => {
-  console.error("System failed to initialize.", err);
-  process.exit(1);
-});
