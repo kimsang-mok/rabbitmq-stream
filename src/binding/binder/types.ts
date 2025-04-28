@@ -22,3 +22,6 @@ export interface IBinder {
   bindInput(name: string, options: InputBindingOptions): InputBinding;
   bindOutput(name: string, options: OutputBindingOptions): OutputBinding;
 }
+
+export const SUBSCRIBER_METADATA = Symbol("subscriber");
+export const PUBLISHER_METADATA = Symbol("publisher");

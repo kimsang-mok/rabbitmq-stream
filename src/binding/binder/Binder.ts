@@ -1,5 +1,10 @@
 import { InputBinding } from "binding/in-binding/InputBinding";
-import { BinderConfig, IBinder } from "./types";
+import {
+  BinderConfig,
+  IBinder,
+  PUBLISHER_METADATA,
+  SUBSCRIBER_METADATA,
+} from "./types";
 import { OutputBinding } from "binding/out-binding/OutputBinding";
 import { ChannelManager } from "connection/ChannelManager";
 import { InputBindingOptions } from "binding/in-binding/types";
@@ -39,5 +44,62 @@ export class Binder implements IBinder {
     }
 
     return { inputs: this.inputs, outputs: this.outputs };
+  }
+
+  async bindSubscribers(services: any[]) {
+    for (const service of services) {
+      const proto = Object.getPrototypeOf(service);
+      const methods = Object.getOwnPropertyNames(proto).filter(
+        (m) => typeof service[m] === "function" && m !== "constructor"
+      );
+
+      for (const methodName of methods) {
+        const method = service[methodName];
+
+        const subscriberBinding = Reflect.getMetadata(
+          SUBSCRIBER_METADATA,
+          method
+        );
+        const publisherBinding = Reflect.getMetadata(
+          PUBLISHER_METADATA,
+          method
+        );
+
+        if (subscriberBinding) {
+          const inputBinding = this.inputs[subscriberBinding];
+          if (!inputBinding) {
+            throw new Error(`No input binding found for ${subscriberBinding}`);
+          }
+          inputBinding.setHandler(async (msg) => {
+            await service[methodName](msg);
+          });
+          await inputBinding.start();
+          console.log(
+            `[Binder] Bound subscriber ${methodName} to ${subscriberBinding}`
+          );
+        }
+
+        if (publisherBinding) {
+          const outputBinding = this.outputs[publisherBinding];
+          if (!outputBinding) {
+            throw new Error(`No output binding found for ${publisherBinding}`);
+          }
+
+          // wrap the method to auto-publish after it executes
+          const originalMethod = service[methodName].bind(service);
+
+          service[methodName] = async (...args: any[]) => {
+            const result = await originalMethod(...args);
+            if (result !== undefined) {
+              await outputBinding.publish(result);
+            }
+            return result;
+          };
+          console.log(
+            `[Binder] Bound publisher ${methodName} to ${publisherBinding}`
+          );
+        }
+      }
+    }
   }
 }

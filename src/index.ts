@@ -6,6 +6,7 @@ import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
 import { MessagingApplicationOptions } from "application/types";
 import { MessagingApplication } from "application/MessagingApplication";
+import userService from "example/user/UserService";
 
 async function bootstrap() {
   console.log("System initialized.");
@@ -13,6 +14,8 @@ async function bootstrap() {
   // createSimpleApplication();
 
   await createMessagingApplication();
+
+  await userService.createUser({ name: "Kimsang" });
 }
 
 bootstrap().catch((err) => {
@@ -42,6 +45,7 @@ async function createMessagingApplication() {
         userPublisher: {
           exchange: "user.exchange",
           exchangeType: "topic",
+          defaultRoutingKey: "user.created",
         },
       },
     },
