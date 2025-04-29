@@ -19,8 +19,11 @@ interface OutputBindingOptionsMap {
  * generic binder interface for extensibility.
  */
 export interface IBinder {
-  bindInput(name: string, options: InputBindingOptions): InputBinding;
-  bindOutput(name: string, options: OutputBindingOptions): OutputBinding;
+  bindInput(name: string, options: InputBindingOptions): Promise<InputBinding>;
+  bindOutput(
+    name: string,
+    options: OutputBindingOptions
+  ): Promise<OutputBinding>;
 }
 
 export const SUBSCRIBER_METADATA = Symbol("subscriber");

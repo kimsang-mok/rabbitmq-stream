@@ -6,6 +6,7 @@ export class DeadLetterHandler {
     channel: Channel,
     {
       mainExchange,
+      mainExchangeType,
       mainQueue,
       routingKey,
       retryExchange,
@@ -25,7 +26,9 @@ export class DeadLetterHandler {
       `${routingKey}.parkinglot`
     );
 
-    await channel.assertExchange(mainExchange, "topic", { durable: true });
+    await channel.assertExchange(mainExchange, mainExchangeType, {
+      durable: true,
+    });
     await channel.assertQueue(mainQueue, {
       durable: true,
       arguments: {

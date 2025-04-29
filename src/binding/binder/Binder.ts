@@ -19,30 +19,38 @@ export class Binder implements IBinder {
 
   constructor(private channelManager: ChannelManager) {}
 
-  bindInput(name: string, options: InputBindingOptions): InputBinding {
+  async bindInput(
+    name: string,
+    options: InputBindingOptions
+  ): Promise<InputBinding> {
     const binding = new InputBinding(this.channelManager, options);
+    await binding.init();
     this.inputs[name] = binding;
     return binding;
   }
 
-  bindOutput(name: string, options: OutputBindingOptions): OutputBinding {
+  async bindOutput(
+    name: string,
+    options: OutputBindingOptions
+  ): Promise<OutputBinding> {
     const binding = new OutputBinding(this.channelManager, options);
+    await binding.init();
     this.outputs[name] = binding;
     return binding;
   }
 
-  bindFromConfig(config: BinderConfig): {
+  async bindFromConfig(config: BinderConfig): Promise<{
     inputs: { [k: string]: InputBinding };
     outputs: { [k: string]: OutputBinding };
-  } {
-    if (config.inputs) {
-      for (const [name, opt] of Object.entries(config.inputs)) {
-        this.bindInput(name, opt);
-      }
-    }
+  }> {
     if (config.outputs) {
       for (const [name, opt] of Object.entries(config.outputs)) {
-        this.bindOutput(name, opt);
+        await this.bindOutput(name, opt);
+      }
+    }
+    if (config.inputs) {
+      for (const [name, opt] of Object.entries(config.inputs)) {
+        await this.bindInput(name, opt);
       }
     }
 
@@ -88,16 +96,43 @@ export class Binder implements IBinder {
             throw new Error(`No output binding found for ${publisherBinding}`);
           }
 
-          // wrap the method to auto-publish after it executes
           const originalMethod = service[methodName].bind(service);
 
           service[methodName] = async (...args: any[]) => {
             const result = await originalMethod(...args);
+
             if (result !== undefined) {
-              await outputBinding.publish(result);
+              let payload = result;
+              let delayMs: number | undefined;
+              let headers: Record<string, any> = {};
+
+              if (
+                typeof result === "object" &&
+                "data" in result &&
+                typeof result.publishOptions === "object"
+              ) {
+                payload = result.data;
+                delayMs = result.publishOptions?.delayMs;
+                headers = result.publishOptions?.headers || {};
+              }
+
+              if (delayMs != null) {
+                this.logger.info("Publish delayed message", {
+                  payload,
+                  delayMs,
+                });
+                await outputBinding.publishDelayed(payload, delayMs); // headers support can be added later
+              } else {
+                this.logger.info("Publish normal message", {
+                  payload,
+                });
+                await outputBinding.publish(payload);
+              }
             }
+
             return result;
           };
+
           this.logger.info(
             `Bound publisher ${methodName} to ${publisherBinding}`
           );

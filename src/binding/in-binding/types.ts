@@ -3,6 +3,8 @@ import amqp from "amqplib";
 export interface InputBindingOptions {
   queue: string;
   exchange?: string;
+  exchangeType?: ExchangeOptions["type"];
+  exchangeArguments?: ExchangeOptions["arguments"];
   routingKey?: string;
   prefetch?: number; // prefetch count for QoS
 

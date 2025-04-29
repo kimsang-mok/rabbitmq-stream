@@ -30,10 +30,21 @@ export class InputBinding {
 
   async init(): Promise<void> {
     this.channel = await this.channelManager.getChannel(ChannelType.Consumer);
-    const { queue, exchange, routingKey, prefetch, retry } = this.options;
+    const {
+      queue,
+      exchange,
+      exchangeType,
+      exchangeArguments,
+      routingKey,
+      prefetch,
+      retry,
+    } = this.options;
 
     if (exchange) {
-      await this.channel.assertExchange(exchange, "topic", { durable: true });
+      await this.channel.assertExchange(exchange, exchangeType || "topic", {
+        durable: true,
+        arguments: exchangeArguments,
+      });
       const bindKey = routingKey || "";
 
       if (!retry) {
@@ -52,6 +63,7 @@ export class InputBinding {
 
       await DeadLetterHandler.setupRetryInfrastructure(this.channel, {
         mainExchange: exchange!,
+        mainExchangeType: exchangeType || "topic",
         mainQueue: queue,
         routingKey: routingKey || "",
         retryExchange,
@@ -103,10 +115,6 @@ export class InputBinding {
   async start(): Promise<void> {
     if (!this.handler) {
       throw new Error("No message handler set for InputBinding");
-    }
-
-    if (!this.channel) {
-      await this.init();
     }
 
     // start consuming: save consumerTag to allow cancellation

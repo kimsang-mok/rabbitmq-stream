@@ -21,7 +21,7 @@ export class MessagingApplication {
   async start(): Promise<void> {
     await this.connectionManager.connect();
 
-    this.binder.bindFromConfig(this.options.binder);
+    await this.binder.bindFromConfig(this.options.binder);
   }
 
   async bindServices(services: any[]): Promise<void> {
