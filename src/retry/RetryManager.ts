@@ -1,8 +1,10 @@
 import { Channel, Message } from "amqplib";
 import { RetryManagerOptions, RetryStrategy } from "./types";
 import { DeadLetterHandler } from "./DeadLetterHandler";
+import { LoggerFactory } from "logging/LoggerFactory";
 
 export class RetryManager {
+  private logger = LoggerFactory.createDefaultLogger(RetryManager.name);
   private attemptHeader = "x-attempts";
 
   constructor(
@@ -32,8 +34,8 @@ export class RetryManager {
         delay
       );
       this.channel.ack(msg);
-      console.warn(
-        `[RetryManager] Message scheduled for retry #${attempts} after ${delay}ms`
+      this.logger.warn(
+        `Message scheduled for retry #${attempts} after ${delay}ms`
       );
     } else {
       await DeadLetterHandler.sendToParkingLot(
@@ -44,8 +46,8 @@ export class RetryManager {
         msg.properties.headers || {}
       );
       this.channel.ack(msg);
-      console.error(
-        `[RetryManager] Message moved to parking lot after ${attempts} attempts`
+      this.logger.error(
+        `Message moved to parking lot after ${attempts} attempts`
       );
     }
   }

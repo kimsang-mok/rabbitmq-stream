@@ -8,9 +8,6 @@
     "emitDecoratorMetadata": true,
     "strict": true,
     "esModuleInterop": true,
-    "baseUrl": "./src",
-    "paths": {
-      "@src/*": ["src/*"]
-    }
+    "baseUrl": "./src"
   }
 }

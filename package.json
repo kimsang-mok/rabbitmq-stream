@@ -14,8 +14,8 @@
   "description": "",
   "dependencies": {
     "amqplib": "^0.10.7",
-    "module-alias": "^2.2.3",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.7",
@@ -23,8 +23,5 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
-  },
-  "_moduleAliases": {
-    "@src": "dist/src"
   }
 }

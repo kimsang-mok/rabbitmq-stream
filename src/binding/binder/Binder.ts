@@ -9,8 +9,11 @@ import { OutputBinding } from "binding/out-binding/OutputBinding";
 import { ChannelManager } from "connection/ChannelManager";
 import { InputBindingOptions } from "binding/in-binding/types";
 import { OutputBindingOptions } from "binding/out-binding/types";
+import { LoggerFactory } from "logging/LoggerFactory";
 
 export class Binder implements IBinder {
+  private logger = LoggerFactory.createDefaultLogger(Binder.name);
+
   private inputs: { [name: string]: InputBinding } = {};
   private outputs: { [name: string]: OutputBinding } = {};
 
@@ -74,8 +77,8 @@ export class Binder implements IBinder {
             await service[methodName](msg);
           });
           await inputBinding.start();
-          console.log(
-            `[Binder] Bound subscriber ${methodName} to ${subscriberBinding}`
+          this.logger.info(
+            `Bound subscriber ${methodName} to ${subscriberBinding}`
           );
         }
 
@@ -95,8 +98,8 @@ export class Binder implements IBinder {
             }
             return result;
           };
-          console.log(
-            `[Binder] Bound publisher ${methodName} to ${publisherBinding}`
+          this.logger.info(
+            `Bound publisher ${methodName} to ${publisherBinding}`
           );
         }
       }

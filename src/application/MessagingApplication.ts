@@ -2,7 +2,6 @@ import { Binder } from "binding/binder/Binder";
 import { ChannelManager } from "connection/ChannelManager";
 import { ConnectionManager } from "connection/ConnectionManager";
 import { MessagingApplicationOptions } from "./types";
-import userService from "example/user/UserService";
 
 export class MessagingApplication {
   private connectionManager: ConnectionManager;
@@ -21,9 +20,9 @@ export class MessagingApplication {
     await this.connectionManager.connect();
 
     this.binder.bindFromConfig(this.options.binder);
+  }
 
-    const services = [userService];
-
+  async bindServices(services: any[]): Promise<void> {
     await this.binder.bindSubscribers(services);
   }
 

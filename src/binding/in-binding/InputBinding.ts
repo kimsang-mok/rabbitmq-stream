@@ -9,8 +9,11 @@ import {
   FixedRetryStrategy,
   ExponentialBackoffStrategy,
 } from "retry/RetryStrategy";
+import { LoggerFactory } from "logging/LoggerFactory";
 
 export class InputBinding {
+  private logger = LoggerFactory.createDefaultLogger(InputBinding.name);
+
   private channel: amqp.Channel | undefined;
   private consumerTag?: string;
   private handler?: MessageHandler;
@@ -122,10 +125,7 @@ export class InputBinding {
         if (this.retryManager) {
           await this.retryManager.handleRetry(msg, error);
         } else {
-          console.error(
-            "[InputBinding] Handler error (no retry configured):",
-            error
-          );
+          this.logger.error(`Handler error (no retry configured): ${error}`);
           this.channel!.reject(msg, false); // no retry, send to DLX if DLX exists
         }
       }
