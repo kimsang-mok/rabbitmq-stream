@@ -8,6 +8,12 @@
     "emitDecoratorMetadata": true,
     "strict": true,
     "esModuleInterop": true,
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "application/*": ["application/*"],
+      "binding/*": ["binding/*"],
+      "connection/*": ["connection/*"],
+      "logging/*": ["logging/*"]
+    }
   }
 }

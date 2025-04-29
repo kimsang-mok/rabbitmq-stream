@@ -105,4 +105,12 @@ export class Binder implements IBinder {
       }
     }
   }
+
+  public getInputBinding(name: string): InputBinding | undefined {
+    return this.inputs[name];
+  }
+
+  public getOutputBinding(name: string): OutputBinding | undefined {
+    return this.outputs[name];
+  }
 }

@@ -2,6 +2,7 @@ import { Binder } from "binding/binder/Binder";
 import { ChannelManager } from "connection/ChannelManager";
 import { ConnectionManager } from "connection/ConnectionManager";
 import { MessagingApplicationOptions } from "./types";
+import { GlobalLogger } from "logging/GlobalLogger";
 
 export class MessagingApplication {
   private connectionManager: ConnectionManager;
@@ -14,6 +15,7 @@ export class MessagingApplication {
     });
     this.channelManager = new ChannelManager(this.connectionManager);
     this.binder = new Binder(this.channelManager);
+    GlobalLogger.initialize(options.observability?.logLevel || "info");
   }
 
   async start(): Promise<void> {

@@ -1,10 +1,11 @@
 {
   "name": "nodejs-messaging-framework",
   "version": "0.0.1",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "watch": "tsc -w",
     "start": "node dist/index.js"
   },
@@ -21,6 +22,7 @@
     "@types/amqplib": "^0.10.7",
     "@types/node": "^22.15.2",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.15",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
