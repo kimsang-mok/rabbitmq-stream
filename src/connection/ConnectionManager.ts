@@ -7,6 +7,7 @@ import {
   JitteredExponentialBackoffStrategy,
 } from "./ReconnectStrategy";
 import { ConnectionFactory } from "./ConnectionFactory";
+import { LoggerFactory } from "logging/LoggerFactory";
 
 /**
  * ConnectionManager manages a single RabbitMQ connection (amqplib) with auto-reconnect and topology recovery.
@@ -14,6 +15,7 @@ import { ConnectionFactory } from "./ConnectionFactory";
  * Emits events: 'connected', 'disconnected', 'reconnecting' for integration.
  */
 export class ConnectionManager extends EventEmitter {
+  private logger = LoggerFactory.createDefaultLogger(ConnectionManager.name);
   private static _instance: ConnectionManager | null = null;
 
   private connection: ChannelModel | null = null;
@@ -105,8 +107,8 @@ export class ConnectionManager extends EventEmitter {
       this.options.maxReconnectAttempts &&
       attemptNumber > this.options.maxReconnectAttempts
     ) {
-      console.error(
-        `[ConnectionManager] Max reconnect attempts (${this.options.maxReconnectAttempts}) reached. Giving up.`
+      this.logger.error(
+        `Max reconnect attempts (${this.options.maxReconnectAttempts}) reached. Giving up.`
       );
       this.connecting = false;
       this.shouldReconnect = false;
@@ -130,7 +132,7 @@ export class ConnectionManager extends EventEmitter {
       conn.on("error", (err) => {
         // the 'error' event is informational; we'll handle reconnect on 'close'
         // log or emit for debugging purposes if needed
-        console.error("[ConnectionManager] Connection error:", err);
+        this.logger.error("Connection error: ", err);
       });
 
       conn.on("close", (err) => {
@@ -146,35 +148,29 @@ export class ConnectionManager extends EventEmitter {
         const delay = this.strategy.getDelay(attemptNumber);
         setTimeout(() => {
           this.connectWithRetry().catch((e) => {
-            console.error("[ConnectionManager] Reconnect attempt failed:", e);
+            this.logger.error("Reconnect attempt failed: ", e);
           });
         }, delay);
       });
 
       // re-declare topology (exchanges, queues, bindings) on the new connection
-      try {
-        await this.redeclareTopology();
-      } catch (topologyErr) {
-        console.error(
-          "[ConnectionManager] Topology re-declaration error:",
-          topologyErr
-        );
-        // (we proceed even if topology setup fails, but this could be handled as needed)
+      // try {
+      //   await this.redeclareTopology();
+      // } catch (topologyErr) {
+      //   // (we proceed even if topology setup fails, but this could be handled as needed)
+      //   this.logger.error(`Topology re-declaration error: ${topologyErr}`);
+      // }
 
-        this.emit("connected");
-      }
+      this.emit("connected");
     } catch (error) {
       this.connecting = false;
       // connection attempt failed: log and schedule next retry
-      console.error(
-        `[ConnectionManager] Connection attempt ${attemptNumber} failed:`,
-        error
-      );
+      this.logger.error(`Connection attempt ${attemptNumber} failed: ${error}`);
 
       const delay = this.strategy.getDelay(attemptNumber);
       setTimeout(() => {
         this.connectWithRetry().catch((e) =>
-          console.error("[ConnectionManager] Reconnect error:", e)
+          this.logger.error("Reconnect error: ", e)
         );
       }, delay);
       // note: we emit 'reconnecting' at the top of this function for attempts > 1
@@ -311,7 +307,7 @@ export class ConnectionManager extends EventEmitter {
       try {
         await this.connection.close();
       } catch (err) {
-        console.error("[ConnectionManager] Error during close:", err);
+        this.logger.error(`Error during close: ${err}`);
       }
     }
     this.connection = null;
