@@ -154,14 +154,14 @@ export class ConnectionManager extends EventEmitter {
       });
 
       // re-declare topology (exchanges, queues, bindings) on the new connection
-      try {
-        await this.redeclareTopology();
-      } catch (topologyErr) {
-        this.logger.error(`Topology re-declaration error: ${topologyErr}`);
-        // (we proceed even if topology setup fails, but this could be handled as needed)
+      // try {
+      //   await this.redeclareTopology();
+      // } catch (topologyErr) {
+      //   // (we proceed even if topology setup fails, but this could be handled as needed)
+      //   this.logger.error(`Topology re-declaration error: ${topologyErr}`);
+      // }
 
-        this.emit("connected");
-      }
+      this.emit("connected");
     } catch (error) {
       this.connecting = false;
       // connection attempt failed: log and schedule next retry

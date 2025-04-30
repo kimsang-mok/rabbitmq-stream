@@ -26,7 +26,7 @@ export class DeadLetterHandler {
       `${routingKey}.parkinglot`
     );
 
-    await channel.assertExchange(mainExchange, mainExchangeType, {
+    await channel.assertExchange(mainExchange, mainExchangeType!, {
       durable: true,
     });
     await channel.assertQueue(mainQueue, {

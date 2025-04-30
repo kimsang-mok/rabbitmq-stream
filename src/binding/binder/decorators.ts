@@ -1,8 +1,8 @@
-import { PUBLISHER_METADATA, SUBSCRIBER_METADATA } from "./types";
+import { PUBLISHER_METADATA, CONSUMER_METADATA } from "./types";
 
-export function Subscriber(bindingName: string): MethodDecorator {
+export function Consumer(bindingName: string): MethodDecorator {
   return (target, propertyKey, descriptor) => {
-    Reflect.defineMetadata(SUBSCRIBER_METADATA, bindingName, descriptor.value!);
+    Reflect.defineMetadata(CONSUMER_METADATA, bindingName, descriptor.value!);
   };
 }
 

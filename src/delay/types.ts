@@ -16,7 +16,7 @@ export type DelayConfig = {
   delayMs?: number;
   targetQueue?: string;
   exchange?: string;
-  exchangeType?: string;
+  exchangeType?: ExchangeOptions["type"];
 };
 
 export type DelayManagerConfig = {

@@ -5,7 +5,6 @@ import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
 import { DelayStrategy } from "delay/types";
 import { DelayManager } from "delay/DelayManager";
-import { LoggerFactory } from "logging/LoggerFactory";
 
 export class OutputBinding {
   private channel: amqp.Channel | undefined;

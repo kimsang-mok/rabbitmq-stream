@@ -3,7 +3,7 @@ import {
   BinderConfig,
   IBinder,
   PUBLISHER_METADATA,
-  SUBSCRIBER_METADATA,
+  CONSUMER_METADATA,
 } from "./types";
 import { OutputBinding } from "binding/out-binding/OutputBinding";
 import { ChannelManager } from "connection/ChannelManager";
@@ -57,7 +57,7 @@ export class Binder implements IBinder {
     return { inputs: this.inputs, outputs: this.outputs };
   }
 
-  async bindSubscribers(services: any[]) {
+  async bindMethods(services: any[]) {
     for (const service of services) {
       const proto = Object.getPrototypeOf(service);
       const methods = Object.getOwnPropertyNames(proto).filter(
@@ -67,26 +67,23 @@ export class Binder implements IBinder {
       for (const methodName of methods) {
         const method = service[methodName];
 
-        const subscriberBinding = Reflect.getMetadata(
-          SUBSCRIBER_METADATA,
-          method
-        );
+        const consumerBinding = Reflect.getMetadata(CONSUMER_METADATA, method);
         const publisherBinding = Reflect.getMetadata(
           PUBLISHER_METADATA,
           method
         );
 
-        if (subscriberBinding) {
-          const inputBinding = this.inputs[subscriberBinding];
+        if (consumerBinding) {
+          const inputBinding = this.inputs[consumerBinding];
           if (!inputBinding) {
-            throw new Error(`No input binding found for ${subscriberBinding}`);
+            throw new Error(`No input binding found for ${consumerBinding}`);
           }
           inputBinding.setHandler(async (msg) => {
             await service[methodName](msg);
           });
           await inputBinding.start();
           this.logger.info(
-            `Bound subscriber ${methodName} to ${subscriberBinding}`
+            `Bound consumer ${methodName} to ${consumerBinding}`
           );
         }
 
@@ -117,13 +114,13 @@ export class Binder implements IBinder {
               }
 
               if (delayMs != null) {
-                this.logger.info("Publish delayed message", {
+                this.logger.debug("Publish delayed message", {
                   payload,
                   delayMs,
                 });
                 await outputBinding.publishDelayed(payload, delayMs); // headers support can be added later
               } else {
-                this.logger.info("Publish normal message", {
+                this.logger.debug("Publish normal message", {
                   payload,
                 });
                 await outputBinding.publish(payload);

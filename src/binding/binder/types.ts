@@ -26,5 +26,5 @@ export interface IBinder {
   ): Promise<OutputBinding>;
 }
 
-export const SUBSCRIBER_METADATA = Symbol("subscriber");
+export const CONSUMER_METADATA = Symbol("subscriber");
 export const PUBLISHER_METADATA = Symbol("publisher");

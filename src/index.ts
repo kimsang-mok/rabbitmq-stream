@@ -1,13 +1,9 @@
 import "reflect-metadata";
 
-export * from "./application/MessagingApplication";
-export * from "./application/types";
+export * from "./application";
+export * from "./connection";
+export * from "./binding/binder";
+export * from "./binding/in-binding";
+export * from "./binding/out-binding";
+export * from "./messaging-registry";
 export * from "./createMessagingContext";
-export * from "./connection/ConnectionManager";
-export * from "./connection/ChannelManager";
-export * from "./connection/types";
-export * from "./binding/binder/Binder";
-export * from "./binding/binder/decorators";
-export * from "./binding/binder/types";
-export * from "./messaging-registry/messagingServiceRegistry";
-export * from "./messaging-registry/decorators";

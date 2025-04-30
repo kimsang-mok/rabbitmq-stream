@@ -17,7 +17,7 @@ export interface RetryManagerOptions {
 
 export interface RetryInfrastructureOptions {
   mainExchange: string;
-  mainExchangeType: string;
+  mainExchangeType: ExchangeOptions["type"];
   mainQueue: string;
   routingKey: string;
   retryExchange: string;
