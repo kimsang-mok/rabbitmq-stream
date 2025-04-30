@@ -1,5 +1,5 @@
 {
-  "name": "rabbitmq-streammer",
+  "name": "rabbitmq-stream",
   "version": "0.1.1",
   "description": "A declarative RabbitMQ messaging framework for Node.js inspired by Spring Cloud Stream",
   "main": "dist/index.js",
@@ -22,12 +22,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kimsang-mok/rabbitmq-streamer"
+    "url": "https://github.com/kimsang-mok/rabbitmq-stream"
   },
   "bugs": {
-    "url": "https://github.com/kimsang-mok/rabbitmq-streamer/issues"
+    "url": "https://github.com/kimsang-mok/rabbitmq-stream/issues"
   },
-  "homepage": "https://github.com/kimsang-mok/rabbitmq-streamer#readme",
+  "homepage": "https://github.com/kimsang-mok/rabbitmq-stream#readme",
   "dependencies": {
     "amqplib": "^0.10.7",
     "reflect-metadata": "^0.2.2",

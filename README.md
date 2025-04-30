@@ -1,4 +1,4 @@
-# RabbitMQ Streamer
+# RabbitMQ Stream
 
 **A minimal yet powerful messaging framework for Node.js + RabbitMQ**, inspired by Spring Cloud Stream. Built on top of [`amqplib`](https://www.npmjs.com/package/amqplib), it provides a clean and declarative way to build event-driven applications with support for automatic retries, delayed messages, dead-letter queues, and connection recovery — all with simple configuration.
 
@@ -20,7 +20,7 @@
 ## Installation
 
 ```bash
-npm install rabbitmq-streamer
+npm install rabbitmq-stream
 ```
 
 ---
@@ -38,8 +38,8 @@ This framework has two main components:
 
 In your app entry point (`index.ts` or `main.ts`), set up the messaging context:
 
-```
-import { createMessagingContext } from "rabbitmq-streamer";
+```tsx
+import { createMessagingContext } from "rabbitmq-stream";
 
 createMessagingContext({
   connection: {
@@ -88,7 +88,6 @@ createMessagingContext({
     logLevel: "info",
   },
 });
-
 ```
 
 ### Define Messaging Services
@@ -96,7 +95,7 @@ createMessagingContext({
 Use decorators to turn regular methods into publishers or consumers.
 
 ```tsx
-import { MessagingService, Publisher, Consumer } from "rabbitmq-streamer";
+import { MessagingService, Publisher, Consumer } from "rabbitmq-stream";
 import { UserCreatedEvent } from "./user.event";
 
 @MessagingService()
