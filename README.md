@@ -39,7 +39,7 @@ This framework has two main components:
 In your app entry point (`index.ts` or `main.ts`), set up the messaging context:
 
 ```tsx
-import { createMessagingContext } from "rabbitmq-stream";
+import { createMessagingContext } from "rabbitmq-streamer";
 
 createMessagingContext({
   connection: {
