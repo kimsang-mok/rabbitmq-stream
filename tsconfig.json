@@ -10,7 +10,10 @@
     "esModuleInterop": true,
     "baseUrl": "./src",
     "paths": {
-      "@src/*": ["src/*"]
+      "application/*": ["application/*"],
+      "binding/*": ["binding/*"],
+      "connection/*": ["connection/*"],
+      "logging/*": ["logging/*"]
     }
   }
 }

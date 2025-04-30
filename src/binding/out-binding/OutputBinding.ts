@@ -1,0 +1,85 @@
+import amqp from "amqplib";
+
+import { OutputBindingOptions } from "./types";
+import { ChannelManager } from "connection/ChannelManager";
+import { ChannelType } from "connection/types";
+import { DelayStrategy } from "delay/types";
+import { DelayManager } from "delay/DelayManager";
+
+export class OutputBinding {
+  private channel: amqp.Channel | undefined;
+  private delayStrategy?: DelayStrategy;
+  options: OutputBindingOptions;
+
+  constructor(
+    private channelManager: ChannelManager,
+    options: OutputBindingOptions
+  ) {
+    this.options = options;
+  }
+
+  /** initialize the channel and declare the exchange (if not already declared). */
+  async init(): Promise<void> {
+    this.channel = await this.channelManager.getChannel(ChannelType.Publisher);
+
+    if (this.options.delay?.strategy) {
+      // internally build the strategy using DelayManager
+      this.delayStrategy = DelayManager.createStrategy({
+        strategy: this.options.delay.strategy,
+        delayMs: this.options.delay.delayMs,
+        targetQueue: this.options.defaultRoutingKey, // used by TTL strategy
+        exchange: this.options.exchange,
+        exchangeType: this.options.exchangeType,
+        xDelayedType: this.options.delay.xDelayedType,
+      });
+
+      await this.delayStrategy.setup(this.channel);
+    } else {
+      await this.channel.assertExchange(
+        this.options.exchange,
+        this.options.exchangeType || "topic",
+        { durable: true }
+      );
+    }
+  }
+
+  /** publish a message to the exchange, using default routing key if none is provided. */
+  async publish(message: any, routingKey?: string): Promise<void> {
+    await this.publishWithDelay(message, undefined, routingKey);
+  }
+
+  async publishDelayed(
+    message: any,
+    delayMs: number,
+    routingKey?: string
+  ): Promise<void> {
+    await this.publishWithDelay(message, delayMs, routingKey);
+  }
+
+  private async publishWithDelay(
+    message: any,
+    delayMs?: number,
+    routingKey?: string
+  ): Promise<void> {
+    const key = routingKey || this.options.defaultRoutingKey || "";
+    const content = Buffer.isBuffer(message)
+      ? message
+      : Buffer.from(
+          typeof message === "string" ? message : JSON.stringify(message)
+        );
+
+    if (this.delayStrategy && delayMs != null) {
+      this.delayStrategy.publish(
+        this.channel!,
+        content,
+        this.options.exchange,
+        key,
+        delayMs
+      );
+    } else {
+      this.channel!.publish(this.options.exchange, key, content, {
+        persistent: true,
+      });
+    }
+  }
+}
