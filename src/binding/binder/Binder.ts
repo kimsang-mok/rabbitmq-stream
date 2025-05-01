@@ -78,8 +78,12 @@ export class Binder implements IBinder {
           if (!inputBinding) {
             throw new Error(`No input binding found for ${consumerBinding}`);
           }
-          inputBinding.setHandler(async (msg) => {
-            await service[methodName](msg);
+          inputBinding.setHandler(async (msg, rawMsg) => {
+            if (service[methodName].length >= 2) {
+              await service[methodName](msg, rawMsg);
+            } else {
+              await service[methodName](msg);
+            }
           });
           await inputBinding.start();
           this.logger.info(
@@ -101,29 +105,36 @@ export class Binder implements IBinder {
             if (result !== undefined) {
               let payload = result;
               let delayMs: number | undefined;
-              let headers: Record<string, any> = {};
+              let messageOptions: Record<string, any> = {};
 
               if (
                 typeof result === "object" &&
                 "data" in result &&
-                typeof result.publishOptions === "object"
+                typeof result.messageOptions === "object"
               ) {
                 payload = result.data;
-                delayMs = result.publishOptions?.delayMs;
-                headers = result.publishOptions?.headers || {};
+                messageOptions = result.messageOptions;
+                delayMs = messageOptions?.delayMs;
               }
 
               if (delayMs != null) {
                 this.logger.debug("Publish delayed message", {
                   payload,
                   delayMs,
+                  messageOptions,
                 });
-                await outputBinding.publishDelayed(payload, delayMs); // headers support can be added later
+                await outputBinding.publishDelayed(
+                  payload,
+                  delayMs,
+                  undefined,
+                  messageOptions
+                );
               } else {
                 this.logger.debug("Publish normal message", {
                   payload,
+                  messageOptions,
                 });
-                await outputBinding.publish(payload);
+                await outputBinding.publish(payload, undefined, messageOptions);
               }
             }
 

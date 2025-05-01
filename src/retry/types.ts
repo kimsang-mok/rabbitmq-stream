@@ -1,3 +1,5 @@
+import { ExchangeOptions } from "types";
+
 export interface RetryStrategy {
   /**
    * compute the delay (ms) before the next retry for the given attempt number (starting at 1).

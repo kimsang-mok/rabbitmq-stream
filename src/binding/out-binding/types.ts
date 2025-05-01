@@ -1,3 +1,5 @@
+import { ExchangeOptions } from "types";
+
 export interface OutputBindingOptions {
   exchange: string;
   defaultRoutingKey?: string;

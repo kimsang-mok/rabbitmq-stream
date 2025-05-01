@@ -39,7 +39,7 @@ This framework has two main components:
 In your app entry point (`index.ts` or `main.ts`), set up the messaging context:
 
 ```tsx
-import { createMessagingContext } from "rabbitmq-stream";
+import { createMessagingContext } from "rabbitmq-streamer";
 
 createMessagingContext({
   connection: {
@@ -105,11 +105,12 @@ export class UserService {
   async createUser(data: UserCreatedEvent) {
     return {
       data,
-      publishOptions: {
+      messageOptions: {
         delayMs: 5000,
         headers: {
           "x-trace-id": "abc123",
         },
+        priority: 5,
       },
     };
   }
@@ -163,6 +164,19 @@ delay: {
 ```
 
 > Allows per-message delay via publishOptions.delayMs.
+
+#### Running RabbitMQ with the Delayed Message Plugin (Locally)
+
+This script will:
+
+- Build the `rabbitmq-delayed` image if it doesn't exist
+- Start a container with default or custom credentials/ports
+
+**Run with defaults**
+
+```bash
+bash docker/run-rabbitmq.sh
+```
 
 ### 2. **Queue TTL + DLX**
 
