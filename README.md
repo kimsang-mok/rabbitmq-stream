@@ -164,6 +164,19 @@ delay: {
 
 > Allows per-message delay via publishOptions.delayMs.
 
+#### Running RabbitMQ with the Delayed Message Plugin (Locally)
+
+This script will:
+
+- Build the `rabbitmq-delayed` image if it doesn't exist
+- Start a container with default or custom credentials/ports
+
+**Run with defaults**
+
+```bash
+bash docker/run-rabbitmq.sh
+```
+
 ### 2. **Queue TTL + DLX**
 
 You can configure delay queues (e.g., `queue.retry.5000`) and set TTL per queue for fixed-delay use cases.
