@@ -3,13 +3,8 @@ import { InputBindingOptions, MessageHandler } from "./types";
 import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
 import { RetryManager } from "retry/RetryManager";
-import { DeadLetterHandler } from "retry/DeadLetterHandler";
-import { RetryStrategy } from "retry/types";
-import {
-  FixedRetryStrategy,
-  ExponentialBackoffStrategy,
-} from "retry/RetryStrategy";
 import { LoggerFactory } from "logging/LoggerFactory";
+import { RetryManagerFactory } from "retry/RetryManagerFactory";
 
 export class InputBinding {
   private logger = LoggerFactory.createDefaultLogger(InputBinding.name);
@@ -26,6 +21,18 @@ export class InputBinding {
     options: InputBindingOptions
   ) {
     this.options = options;
+
+    this.channelManager["connectionManager"].on("connected", async () => {
+      this.logger.warn("Reinitializing InputBinding after reconnect");
+      try {
+        await this.init();
+        if (this.handler) {
+          await this.start();
+        }
+      } catch (err: any) {
+        this.logger.error("Reinitialization of InputBinding failed: ", err);
+      }
+    });
   }
 
   async init(): Promise<void> {
@@ -57,51 +64,9 @@ export class InputBinding {
     }
 
     if (retry) {
-      const retryExchange = retry.retryExchange || `${exchange}.retry`;
-      const retryQueuePrefix = retry.retryQueuePrefix || `${queue}.retry`;
-      const parkingLotQueue = retry.parkingLotQueue || `${queue}.parkinglot`;
-
-      await DeadLetterHandler.setupRetryInfrastructure(this.channel, {
-        mainExchange: exchange!,
-        mainExchangeType: exchangeType || "topic",
-        mainQueue: queue,
-        routingKey: routingKey || "",
-        retryExchange,
-        retryQueuePrefix,
-        parkingLotQueue,
-        maxAttempts: retry.maxAttempts ?? 3,
-        backoffInitial: retry.backoffInitial ?? 500,
-        backoffMultiplier: retry.backoffMultiplier ?? 2,
-        backoffMax: retry.backoffMax ?? 10000,
-      });
-
-      let retryStrategy: RetryStrategy;
-      if (retry.strategy === "fixed") {
-        retryStrategy = new FixedRetryStrategy(
-          retry.maxAttempts ?? 3,
-          retry.backoffInitial ?? 500
-        );
-      } else if (retry.strategy === "exponential") {
-        retryStrategy = new ExponentialBackoffStrategy(
-          retry.maxAttempts ?? 5,
-          retry.backoffInitial ?? 1000,
-          retry.backoffMultiplier ?? 2,
-          retry.backoffMax ?? 30000
-        );
-      } else {
-        retryStrategy = new FixedRetryStrategy(3, 5000); // fallback default
-      }
-      this.retryManager = new RetryManager(
+      this.retryManager = await RetryManagerFactory.create(
         this.channel,
-        {
-          mainExchange: exchange!,
-          mainQueue: queue,
-          routingKey: routingKey || "",
-          retryExchange,
-          retryQueuePrefix,
-          parkingLotQueue,
-        },
-        retryStrategy
+        this.options
       );
     }
   }

@@ -1,4 +1,5 @@
 import amqp from "amqplib";
+import { ExchangeOptions } from "types";
 
 export interface InputBindingOptions {
   queue: string;

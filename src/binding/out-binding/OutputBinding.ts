@@ -1,21 +1,33 @@
-import amqp from "amqplib";
+import amqp, { Options } from "amqplib";
 
 import { OutputBindingOptions } from "./types";
 import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
 import { DelayStrategy } from "delay/types";
 import { DelayManager } from "delay/DelayManager";
+import { LoggerFactory } from "logging/LoggerFactory";
 
 export class OutputBinding {
   private channel: amqp.Channel | undefined;
   private delayStrategy?: DelayStrategy;
   options: OutputBindingOptions;
+  private logger = LoggerFactory.createDefaultLogger(OutputBinding.name);
 
   constructor(
     private channelManager: ChannelManager,
     options: OutputBindingOptions
   ) {
     this.options = options;
+
+    this.channelManager["connectionManager"].on("connected", async () => {
+      try {
+        this.channel = undefined;
+        this.logger.warn("Reinitializing OutputBinding after reconnect");
+        await this.init();
+      } catch (err: any) {
+        this.logger.error("Reinitialization of OutputBinding failed: ", err);
+      }
+    });
   }
 
   /** initialize the channel and declare the exchange (if not already declared). */
@@ -44,22 +56,28 @@ export class OutputBinding {
   }
 
   /** publish a message to the exchange, using default routing key if none is provided. */
-  async publish(message: any, routingKey?: string): Promise<void> {
-    await this.publishWithDelay(message, undefined, routingKey);
+  async publish(
+    message: any,
+    routingKey?: string,
+    options?: Options.Publish
+  ): Promise<void> {
+    await this.publishWithDelay(message, undefined, routingKey, options);
   }
 
   async publishDelayed(
     message: any,
     delayMs: number,
-    routingKey?: string
+    routingKey?: string,
+    options?: Options.Publish
   ): Promise<void> {
-    await this.publishWithDelay(message, delayMs, routingKey);
+    await this.publishWithDelay(message, delayMs, routingKey, options);
   }
 
   private async publishWithDelay(
     message: any,
     delayMs?: number,
-    routingKey?: string
+    routingKey?: string,
+    options?: Options.Publish
   ): Promise<void> {
     const key = routingKey || this.options.defaultRoutingKey || "";
     const content = Buffer.isBuffer(message)
@@ -74,11 +92,14 @@ export class OutputBinding {
         content,
         this.options.exchange,
         key,
-        delayMs
+        delayMs,
+        options
       );
     } else {
       this.channel!.publish(this.options.exchange, key, content, {
-        persistent: true,
+        persistent: options?.persistent ?? true,
+        headers: options?.headers,
+        ...options,
       });
     }
   }
