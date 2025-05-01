@@ -21,6 +21,18 @@ export class InputBinding {
     options: InputBindingOptions
   ) {
     this.options = options;
+
+    this.channelManager["connectionManager"].on("connected", async () => {
+      this.logger.warn("Reinitializing InputBinding after reconnect");
+      try {
+        await this.init();
+        if (this.handler) {
+          await this.start();
+        }
+      } catch (err: any) {
+        this.logger.error("Reinitialization of InputBinding failed: ", err);
+      }
+    });
   }
 
   async init(): Promise<void> {

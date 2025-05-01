@@ -5,17 +5,29 @@ import { ChannelManager } from "connection/ChannelManager";
 import { ChannelType } from "connection/types";
 import { DelayStrategy } from "delay/types";
 import { DelayManager } from "delay/DelayManager";
+import { LoggerFactory } from "logging/LoggerFactory";
 
 export class OutputBinding {
   private channel: amqp.Channel | undefined;
   private delayStrategy?: DelayStrategy;
   options: OutputBindingOptions;
+  private logger = LoggerFactory.createDefaultLogger(OutputBinding.name);
 
   constructor(
     private channelManager: ChannelManager,
     options: OutputBindingOptions
   ) {
     this.options = options;
+
+    this.channelManager["connectionManager"].on("connected", async () => {
+      try {
+        this.channel = undefined;
+        this.logger.warn("Reinitializing OutputBinding after reconnect");
+        await this.init();
+      } catch (err: any) {
+        this.logger.error("Reinitialization of OutputBinding failed: ", err);
+      }
+    });
   }
 
   /** initialize the channel and declare the exchange (if not already declared). */
