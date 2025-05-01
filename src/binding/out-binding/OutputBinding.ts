@@ -1,4 +1,4 @@
-import amqp from "amqplib";
+import amqp, { Options } from "amqplib";
 
 import { OutputBindingOptions } from "./types";
 import { ChannelManager } from "connection/ChannelManager";
@@ -56,22 +56,28 @@ export class OutputBinding {
   }
 
   /** publish a message to the exchange, using default routing key if none is provided. */
-  async publish(message: any, routingKey?: string): Promise<void> {
-    await this.publishWithDelay(message, undefined, routingKey);
+  async publish(
+    message: any,
+    routingKey?: string,
+    options?: Options.Publish
+  ): Promise<void> {
+    await this.publishWithDelay(message, undefined, routingKey, options);
   }
 
   async publishDelayed(
     message: any,
     delayMs: number,
-    routingKey?: string
+    routingKey?: string,
+    options?: Options.Publish
   ): Promise<void> {
-    await this.publishWithDelay(message, delayMs, routingKey);
+    await this.publishWithDelay(message, delayMs, routingKey, options);
   }
 
   private async publishWithDelay(
     message: any,
     delayMs?: number,
-    routingKey?: string
+    routingKey?: string,
+    options?: Options.Publish
   ): Promise<void> {
     const key = routingKey || this.options.defaultRoutingKey || "";
     const content = Buffer.isBuffer(message)
@@ -86,11 +92,14 @@ export class OutputBinding {
         content,
         this.options.exchange,
         key,
-        delayMs
+        delayMs,
+        options
       );
     } else {
       this.channel!.publish(this.options.exchange, key, content, {
-        persistent: true,
+        persistent: options?.persistent ?? true,
+        headers: options?.headers,
+        ...options,
       });
     }
   }

@@ -1,4 +1,4 @@
-import { Channel } from "amqplib";
+import { Channel, Options } from "amqplib";
 import { ExchangeOptions } from "types";
 
 export interface DelayStrategy {
@@ -8,7 +8,8 @@ export interface DelayStrategy {
     message: Buffer,
     exchange: string,
     routingKey: string,
-    delayMs?: number
+    delayMs?: number,
+    options?: Options.Publish
   ): void;
 }
 

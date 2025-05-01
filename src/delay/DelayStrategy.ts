@@ -1,4 +1,4 @@
-import { Channel } from "amqplib";
+import { Channel, Options } from "amqplib";
 import { DelayStrategy } from "./types";
 
 export class TTLDelayStrategy implements DelayStrategy {
@@ -23,9 +23,15 @@ export class TTLDelayStrategy implements DelayStrategy {
     channel: Channel,
     message: Buffer,
     _exchange: string,
-    _routingKey: string
+    _routingKey: string,
+    _delayMs?: number,
+    options?: Options.Publish
   ): void {
-    channel.sendToQueue(this.delayQueueName, message, { persistent: true });
+    channel.sendToQueue(this.delayQueueName, message, {
+      ...options,
+      persistent: options?.persistent ?? true,
+      headers: options?.headers,
+    });
   }
 }
 
@@ -54,11 +60,16 @@ export class XDelayedPluginStrategy implements DelayStrategy {
     message: Buffer,
     exchange: string,
     routingKey: string,
-    delayMs = 0
+    delayMs = 0,
+    options?: Options.Publish
   ): void {
     channel.publish(exchange, routingKey, message, {
-      persistent: true,
-      headers: { "x-delay": delayMs },
+      ...options,
+      persistent: options?.persistent ?? true,
+      headers: {
+        ...(options?.headers || {}),
+        "x-delay": delayMs,
+      },
     });
   }
 }

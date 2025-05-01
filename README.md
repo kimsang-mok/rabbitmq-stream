@@ -105,11 +105,12 @@ export class UserService {
   async createUser(data: UserCreatedEvent) {
     return {
       data,
-      publishOptions: {
+      messageOptions: {
         delayMs: 5000,
         headers: {
           "x-trace-id": "abc123",
         },
+        priority: 5,
       },
     };
   }
