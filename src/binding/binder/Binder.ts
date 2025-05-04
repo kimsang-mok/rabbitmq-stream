@@ -60,17 +60,24 @@ export class Binder implements IBinder {
   async bindMethods(services: any[]) {
     for (const service of services) {
       const proto = Object.getPrototypeOf(service);
-      const methods = Object.getOwnPropertyNames(proto).filter(
-        (m) => typeof service[m] === "function" && m !== "constructor"
+
+      const methodNames = Object.getOwnPropertyNames(proto).filter(
+        (name) => name !== "constructor" && typeof proto[name] === "function"
       );
 
-      for (const methodName of methods) {
-        const method = service[methodName];
+      for (const methodName of methodNames) {
+        const descriptor = Object.getOwnPropertyDescriptor(proto, methodName);
+        if (!descriptor || typeof descriptor.value !== "function") continue;
 
-        const consumerBinding = Reflect.getMetadata(CONSUMER_METADATA, method);
+        const originalMethod = descriptor.value;
+
+        const consumerBinding = Reflect.getMetadata(
+          CONSUMER_METADATA,
+          originalMethod
+        );
         const publisherBinding = Reflect.getMetadata(
           PUBLISHER_METADATA,
-          method
+          originalMethod
         );
 
         if (consumerBinding) {
@@ -79,10 +86,10 @@ export class Binder implements IBinder {
             throw new Error(`No input binding found for ${consumerBinding}`);
           }
           inputBinding.setHandler(async (msg, rawMsg) => {
-            if (service[methodName].length >= 2) {
-              await service[methodName](msg, rawMsg);
+            if (originalMethod.length >= 2) {
+              await originalMethod.call(service, msg, rawMsg);
             } else {
-              await service[methodName](msg);
+              await originalMethod.call(service, msg);
             }
           });
           await inputBinding.start();
@@ -97,10 +104,8 @@ export class Binder implements IBinder {
             throw new Error(`No output binding found for ${publisherBinding}`);
           }
 
-          const originalMethod = service[methodName].bind(service);
-
           service[methodName] = async (...args: any[]) => {
-            const result = await originalMethod(...args);
+            const result = await originalMethod.apply(service, args);
 
             if (result !== undefined) {
               let payload = result;
