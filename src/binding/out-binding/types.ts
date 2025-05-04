@@ -12,9 +12,8 @@ export interface OutputBindingOptions {
   };
 }
 
-export type PublisherReturnType<TPayload, TResult = void> = Promise<
+export type PublisherReturnType<TPayload> = Promise<
   | TPayload
-  | TResult
   | {
       data: TPayload;
       messageOptions?: Options.Publish & {

@@ -10,6 +10,11 @@ import { ChannelManager } from "connection/ChannelManager";
 import { InputBindingOptions } from "binding/in-binding/types";
 import { OutputBindingOptions } from "binding/out-binding/types";
 import { LoggerFactory } from "logging/LoggerFactory";
+import {
+  getFunctionConsumers,
+  getFunctionPublishers,
+  setBoundPublisher,
+} from "messaging-registry/messagingFunctionRegistry";
 
 export class Binder implements IBinder {
   private logger = LoggerFactory.createDefaultLogger(Binder.name);
@@ -151,6 +156,59 @@ export class Binder implements IBinder {
           );
         }
       }
+    }
+  }
+
+  async bindFunctions() {
+    const consumers = getFunctionConsumers();
+    const publishers = getFunctionPublishers();
+
+    for (const [bindingName, handler] of Object.entries(consumers)) {
+      const input = this.inputs[bindingName];
+      if (!input) throw new Error(`Input binding '${bindingName}' not found`);
+      input.setHandler(handler);
+      await input.start();
+      this.logger.info(`Bound functional consumer to ${bindingName}`);
+    }
+
+    for (const [bindingName, handler] of Object.entries(publishers)) {
+      const output = this.outputs[bindingName];
+      if (!output) throw new Error(`Output binding '${bindingName}' not found`);
+
+      const wrapped = async (...args: any[]) => {
+        const result = await handler(...args);
+        if (!result) return;
+
+        let payload = result;
+        let delayMs: number | undefined;
+        let messageOptions: Record<string, any> = {};
+
+        if (
+          typeof result === "object" &&
+          "data" in result &&
+          typeof result.messageOptions === "object"
+        ) {
+          payload = result.data;
+          messageOptions = result.messageOptions;
+          delayMs = messageOptions?.delayMs;
+        }
+
+        if (delayMs != null) {
+          await output.publishDelayed(
+            payload,
+            delayMs,
+            undefined,
+            messageOptions
+          );
+        } else {
+          await output.publish(payload, undefined, messageOptions);
+        }
+
+        return result;
+      };
+
+      setBoundPublisher(bindingName, wrapped);
+      this.logger.info(`Bound functional publisher to ${bindingName}`);
     }
   }
 
