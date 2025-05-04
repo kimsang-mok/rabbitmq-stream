@@ -1,3 +1,4 @@
+import { Options } from "amqplib";
 import { ExchangeOptions } from "types";
 
 export interface OutputBindingOptions {
@@ -10,3 +11,14 @@ export interface OutputBindingOptions {
     xDelayedType?: ExchangeOptions["type"];
   };
 }
+
+export type PublisherReturnType<TPayload, TResult = void> = Promise<
+  | TPayload
+  | TResult
+  | {
+      data: TPayload;
+      messageOptions?: Options.Publish & {
+        delayMs?: number;
+      };
+    }
+>;
