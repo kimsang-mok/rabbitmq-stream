@@ -130,7 +130,7 @@ export class UserService {
 - `inputs` are **consumers**: define where your service listens.
 - `outputs` are **publishers**: define where your messages are sent.
 - Use `@Consumer` to consume messages, and `@Publisher` to emit them.
-- Everything is bound automatically through `@MessagingService()`.
+- Everything is bound automatically through `@MessagingService()`. This decorator marks class as a **messaging-aware service** that should be automactically registered into global messaging registry upon instantiation. It uses a pattern known as **subclass proxying** and is designed to be DI framework-agnostic.
 
 ---
 
