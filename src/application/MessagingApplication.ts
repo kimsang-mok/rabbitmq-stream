@@ -26,6 +26,7 @@ export class MessagingApplication {
 
   async bindServices(services: any[]): Promise<void> {
     await this.binder.bindMethods(services);
+    await this.binder.bindFunctions();
   }
 
   async stop(): Promise<void> {

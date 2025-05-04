@@ -95,14 +95,21 @@ createMessagingContext({
 Use decorators to turn regular methods into publishers or consumers.
 
 ```tsx
-import { MessagingService, Publisher, Consumer } from "rabbitmq-stream";
+import {
+  MessagingService,
+  Publisher,
+  Consumer,
+  PublisherReturnType,
+} from "rabbitmq-stream";
 import { UserCreatedEvent } from "./user.event";
 
 @MessagingService()
 export class UserService {
-  // 👇 Publishes messages to the userCreatedPublisher output
+  // Publishes messages to the userCreatedPublisher output
   @Publisher("userCreatedPublisher")
-  async createUser(data: UserCreatedEvent) {
+  async createUser(
+    data: UserCreatedEvent
+  ): PublisherReturnType<UserCreatedEvent> {
     return {
       data,
       messageOptions: {
@@ -115,7 +122,7 @@ export class UserService {
     };
   }
 
-  // 👇 Consumes messages from the userCreatedConsumer input
+  // Consumes messages from the userCreatedConsumer input
   @Consumer("userCreatedConsumer")
   async handleUserCreated(event: UserCreatedEvent) {
     if (event.id === "1") {
@@ -131,6 +138,50 @@ export class UserService {
 - `outputs` are **publishers**: define where your messages are sent.
 - Use `@Consumer` to consume messages, and `@Publisher` to emit them.
 - Everything is bound automatically through `@MessagingService()`. This decorator marks class as a **messaging-aware service** that should be automactically registered into global messaging registry upon instantiation. It uses a pattern known as **subclass proxying** and is designed to be DI framework-agnostic.
+
+### Functional Style (No Decorators)
+
+If you prefer a functional approach, you can use registerPublisher and registerConsumer instead of class decorators:
+
+```tsx
+import {
+  registerPublisher,
+  registerConsumer,
+  getBoundPublisher,
+  PublisherReturnType,
+} from "rabbitmq-stream";
+import { UserCreatedEvent } from "./user.event";
+
+// Register a functional publisher
+registerPublisher(
+  "userCreatedPublisher",
+  async (data: UserCreatedEvent): PublisherReturnType<UserCreatedEvent> => {
+    return {
+      data,
+      messageOptions: {
+        delayMs: 5000,
+        headers: {
+          "x-trace-id": "abc123",
+        },
+      },
+    };
+  }
+);
+
+// Register a functional consumer
+registerConsumer("userCreatedConsumer", async (event: UserCreatedEvent) => {
+  console.log("Functionally Consumed UserCreatedEvent:", event);
+});
+```
+
+After createMessagingContext() is called, the framework will automatically bind both registered functions to their queues/exchanges and expose registered publishers via getBoundPublisher(...):
+
+```tsx
+const publish = getBoundPublisher("userCreatedPublisher");
+await publish({ id: "1", name: "John" });
+```
+
+This can be used for apps using functional programming.
 
 ---
 
