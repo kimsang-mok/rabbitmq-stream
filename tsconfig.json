@@ -7,13 +7,21 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strict": true,
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "baseUrl": "./src",
     "paths": {
       "application/*": ["application/*"],
       "binding/*": ["binding/*"],
       "connection/*": ["connection/*"],
-      "logging/*": ["logging/*"]
+      "logging/*": ["logging/*"],
+      "retry/*": ["retry/*"],
+      "delay/*": ["delay/*"],
+      "createMessagingContext": ["createMessagingContext.ts"],
+      "messaging-registry/*": ["messaging-registry/*"],
+      "testcontainer": ["testcontainer/index.ts"],
+      "testcontainer/*": ["testcontainer/*"],
+      "test/*": ["test/*"]
     }
   }
 }
