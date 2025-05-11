@@ -15,7 +15,7 @@ describe("Connection", () => {
     const { amqpUri } = await startRabbitContainer();
     rabbitUri = amqpUri;
     GlobalLogger.initialize();
-  }, 60000);
+  }, 10000);
 
   afterAll(async () => {
     await messagingContext?.stop();
