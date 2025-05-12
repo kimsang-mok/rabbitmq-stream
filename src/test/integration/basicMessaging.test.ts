@@ -1,6 +1,5 @@
 import { MessagingApplication } from "application/MessagingApplication";
 import { createMessagingContext } from "createMessagingContext";
-import { GlobalLogger } from "logging/GlobalLogger";
 import { BasicMessagingFixture } from "test/fixture/BasicMessagingFixture";
 import {
   startRabbitContainer,
@@ -14,7 +13,6 @@ describe("Basic Publish/Consume Flow", () => {
 
   beforeAll(async () => {
     const { amqpUri } = await startRabbitContainer();
-    GlobalLogger.initialize();
     service = new BasicMessagingFixture();
 
     messagingContext = await createMessagingContext({
@@ -37,7 +35,7 @@ describe("Basic Publish/Consume Flow", () => {
     });
 
     service.onMessage((msg) => received.push(msg));
-  }, 10000);
+  }, 60000);
 
   afterAll(async () => {
     await messagingContext?.stop();
