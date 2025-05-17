@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 import { Consumer, Publisher } from "binding/binder";
 import { MessagingService } from "messaging-registry/decorators";
-import { EventEmitter } from "stream";
+import { EventEmitter } from "events";
 
 @MessagingService()
 export class BasicMessagingFixture {
